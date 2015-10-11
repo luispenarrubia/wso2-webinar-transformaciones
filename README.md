@@ -8,7 +8,7 @@ Además de WSO2 ESB 4.8.1, se han utilizado los siguientes productos para implem
 
 Todos los productos han sido instalados por defecto, por lo tanto los puertos son:
 - WSO2 ESB 4.8.1: Puerto servicio 8280, puerto consola web 9443.
-- Wiremock: Puerto 8080.
+- Wiremock 1.5.7: Puerto 8080.
 
 La estructura del código es la siguiente:
 - esb: Código synapse de la API utilizada y carpeta resources con las transformaciones XSLT, FASTXSLT y XQuery.
