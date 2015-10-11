@@ -1,0 +1,14 @@
+{
+    "request": {
+            "method": "POST",
+            "url": "/usersCreate",
+			"bodyPatterns" : [
+				{ "contains" : "<id>1</id>" },
+				{ "contains" : "<name>Alberto</name>" },
+				{ "contains" : "<surname>Sanchez</surname>" }
+			]
+    },
+    "response": {
+            "status": 200
+    }
+}

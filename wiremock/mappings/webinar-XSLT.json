@@ -1,0 +1,15 @@
+{
+    "request": {
+            "method": "POST",
+            "url": "/usersCreateV2",
+			"bodyPatterns" : [
+				{ "contains" : "<chkry:id>001-1</chkry:id>" },
+				{ "contains" : "<chkry:firstName>Alberto</chkry:firstName>" },
+				{ "contains" : "<chkry:lastName>Sanchez</chkry:lastName>" },
+				{ "contains" : "<chkry:title>03</chkry:title>" }
+			]
+    },
+    "response": {
+            "status": 200
+    }
+}

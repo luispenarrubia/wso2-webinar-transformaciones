@@ -1,0 +1,296 @@
+<api xmlns="http://ws.apache.org/ns/synapse" name="Users" context="/users">
+   <resource methods="POST" uri-template="/create?id={id}&amp;name={name}&amp;surname={surname}">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Crear usuario"></property>
+         </log>
+         <payloadFactory media-type="xml">
+            <format>
+               <users_create>
+                  <id>$1</id>
+                  <name>$2</name>
+                  <surname>$3</surname>
+               </users_create>
+            </format>
+            <args>
+               <arg evaluator="xml" expression="get-property('uri.var.id')"></arg>
+               <arg evaluator="xml" expression="get-property('uri.var.name')"></arg>
+               <arg evaluator="xml" expression="get-property('uri.var.surname')"></arg>
+            </args>
+         </payloadFactory>		 
+         <send>
+            <endpoint name="WIREMOCK">
+			   <address uri="http://localhost:8080/usersCreate" format="soap11"/>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <switch source="$axis2:HTTP_SC">
+            <case regex="^200$">
+				<property name="backend_response" value="OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Usuario creado satisfactoriamente"></property>
+				</log>
+			</case>
+            <default>
+				<property name="backend_response" value="NOT_OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Error al crear el usuario"></property>
+				</log>				
+			</default>			
+		 </switch>
+         <payloadFactory media-type="json">
+            <format>{"estado": "$1"}</format>
+            <args>
+               <arg evaluator="xml" expression="get-property('backend_response')"></arg>
+            </args>
+         </payloadFactory>
+         <property name="messageType" value="application/json" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="application/json" scope="axis2" type="STRING"></property>		 
+         <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>
+   <resource methods="GET" uri-template="/list">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Lista de usuarios"></property>
+         </log>
+         <send>
+            <endpoint name="WIREMOCK">
+			   <http method="get" uri-template="http://localhost:8080/usersList"></http>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+			<log level="custom">
+				<property name="logmessage" value="[CHAKRAY_USUARIOS] Respuesta del backend"></property>
+			</log>	  
+		   <property name="messageType" value="application/json" scope="axis2" type="STRING"></property>
+		   <property name="contentType" value="application/json" scope="axis2" type="STRING"></property>
+		   <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>   
+   <resource methods="PUT" uri-template="/update">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Actualizar usuario"></property>
+         </log>
+		 <property name="idRecibido" expression="//id" scope="default" type="STRING"/>
+		 <property name="idBackend" expression="fn:concat('001-',get-property('idRecibido'))"/>
+ 		 <enrich> 
+			<source xpath="$ctx:idBackend"/> 
+			<target xpath="//id/text()"/> 
+		 </enrich>
+         <send>
+            <endpoint name="WIREMOCK">
+			   <http method="put" uri-template="http://localhost:8080/usersUpdate"></http>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <switch source="$axis2:HTTP_SC">
+            <case regex="^200$">
+				<property name="backend_response" value="OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Usuario actualizado satisfactoriamente"></property>
+				</log>
+			</case>
+            <default>
+				<property name="backend_response" value="NOT_OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Error al actualizar el usuario"></property>
+				</log>				
+			</default>			
+		 </switch>
+         <payloadFactory media-type="xml">
+            <format><estado>$1</estado></format>
+            <args>
+               <arg evaluator="xml" expression="get-property('backend_response')"></arg>
+            </args>
+         </payloadFactory>
+         <property name="messageType" value="text/xml" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="text/xml" scope="axis2" type="STRING"></property>		 
+         <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>
+   <resource methods="PUT" uri-template="/update/v2">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Actualizar usuario"></property>
+         </log>
+         <script language="js"><![CDATA[
+			   var idRecibido = mc.getPayloadXML()..*::id.toString();
+			   var idFinal = "<id>001-"+idRecibido+"</id>";
+			   var payloadRecibido = mc.getPayloadXML();
+			   var payloadFinal = payloadRecibido.replace(idRecibido,idFinal);
+               mc.setPayloadXML(payloadFinal);
+         ]]></script>
+         <send>
+            <endpoint name="WIREMOCK">
+			   <http method="put" uri-template="http://localhost:8080/usersUpdate"></http>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <switch source="$axis2:HTTP_SC">
+            <case regex="^200$">
+				<property name="backend_response" value="OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Usuario actualizado satisfactoriamente"></property>
+				</log>
+			</case>
+            <default>
+				<property name="backend_response" value="NOT_OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Error al actualizar el usuario"></property>
+				</log>				
+			</default>			
+		 </switch>
+         <payloadFactory media-type="xml">
+            <format><estado>$1</estado></format>
+            <args>
+               <arg evaluator="xml" expression="get-property('backend_response')"></arg>
+            </args>
+         </payloadFactory>
+         <property name="messageType" value="text/xml" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="text/xml" scope="axis2" type="STRING"></property>		 
+         <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>      
+   <resource methods="POST" uri-template="/create/v2">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Crear usuario"></property>
+         </log>
+		 <property name="idRecibido" expression="//id" scope="default" type="STRING"/>
+		 <property name="idBackend" expression="fn:concat('001-',get-property('idRecibido'))"/>		 
+ 		 <xslt key="gov:/custom/webinar-input.xslt">
+			<property name="userId" expression="get-property('idBackend')"></property>
+		 </xslt>
+         <property name="messageType" value="text/xml" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="text/xml" scope="axis2" type="STRING"></property>		 
+         <send>
+            <endpoint name="WIREMOCK">
+			   <address uri="http://localhost:8080/usersCreateV2" format="soap11"/>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <switch source="$axis2:HTTP_SC">
+            <case regex="^200$">
+				<property name="backend_response" value="OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Usuario creado satisfactoriamente"></property>
+				</log>
+			</case>
+            <default>
+				<property name="backend_response" value="NOT_OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Error al crear el usuario"></property>
+				</log>				
+			</default>			
+		 </switch>
+         <payloadFactory media-type="json">
+            <format>{"estado": "$1"}</format>
+            <args>
+               <arg evaluator="xml" expression="get-property('backend_response')"></arg>
+            </args>
+         </payloadFactory>
+		 <property name="messageType" value="application/json" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="application/json" scope="axis2" type="STRING"></property>
+         <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>   
+   <resource methods="POST" uri-template="/create/v3">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Crear usuario"></property>
+         </log>
+ 		 <xslt key="gov:/custom/webinar-input-fast.xslt"/>
+         <property name="messageType" value="text/xml" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="text/xml" scope="axis2" type="STRING"></property>		 
+         <send>
+            <endpoint name="WIREMOCK">
+			   <address uri="http://localhost:8080/usersCreateV3" format="soap11"/>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <switch source="$axis2:HTTP_SC">
+            <case regex="^200$">
+				<property name="backend_response" value="OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Usuario creado satisfactoriamente"></property>
+				</log>
+			</case>
+            <default>
+				<property name="backend_response" value="NOT_OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Error al crear el usuario"></property>
+				</log>				
+			</default>			
+		 </switch>
+         <payloadFactory media-type="json">
+            <format>{"estado": "$1"}</format>
+            <args>
+               <arg evaluator="xml" expression="get-property('backend_response')"></arg>
+            </args>
+         </payloadFactory>
+		 <property name="messageType" value="application/json" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="application/json" scope="axis2" type="STRING"></property>
+         <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>   
+   <resource methods="POST" uri-template="/create/v4">
+      <inSequence>	
+         <log level="custom">
+            <property name="logmessage" value="[CHAKRAY_USUARIOS] Crear usuario"></property>
+         </log>
+		 <property name="idRecibido" expression="//id" scope="default" type="STRING"/>
+		 <property name="idBackend" expression="fn:concat('001-',get-property('idRecibido'))"/>
+ 		 <xquery key="gov:/custom/webinar-input.xq">
+			<variable name="payload" type="ELEMENT"/>
+			<variable name="userId" expression="get-property('idBackend')" type="STRING"/>
+		 </xquery>
+         <property name="messageType" value="text/xml" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="text/xml" scope="axis2" type="STRING"></property>		 
+         <send>
+            <endpoint name="WIREMOCK">
+			   <address uri="http://localhost:8080/usersCreateV4" format="soap11"/>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <switch source="$axis2:HTTP_SC">
+            <case regex="^200$">
+				<property name="backend_response" value="OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Usuario creado satisfactoriamente"></property>
+				</log>
+			</case>
+            <default>
+				<property name="backend_response" value="NOT_OK"></property>
+                <log level="custom">
+					<property name="logmessage" value="[CHAKRAY_USUARIOS] Error al crear el usuario"></property>
+				</log>				
+			</default>			
+		 </switch>
+         <payloadFactory media-type="json">
+            <format>{"estado": "$1"}</format>
+            <args>
+               <arg evaluator="xml" expression="get-property('backend_response')"></arg>
+            </args>
+         </payloadFactory>
+		 <property name="messageType" value="application/json" scope="axis2" type="STRING"></property>
+		 <property name="contentType" value="application/json" scope="axis2" type="STRING"></property>
+         <send></send>
+      </outSequence>
+      <faultSequence></faultSequence>
+   </resource>      
+</api>

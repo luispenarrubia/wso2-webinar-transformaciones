@@ -1,0 +1,13 @@
+{
+    "request": {
+            "method": "GET",
+            "url": "/usersList"
+    },
+    "response": {
+            "status": 200,
+			"bodyFileName": "users-list.xml",
+            "headers": {
+                    "Content-Type": "text/xml"
+            }
+    }
+}

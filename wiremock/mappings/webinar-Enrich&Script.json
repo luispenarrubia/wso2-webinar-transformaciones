@@ -1,0 +1,14 @@
+{
+    "request": {
+            "method": "PUT",
+            "url": "/usersUpdate",
+			"bodyPatterns" : [
+				{ "contains" : "<id>001-1</id>" },
+				{ "contains" : "<name>Alberto</name>" },
+				{ "contains" : "<surname>Sanchez</surname>" }
+			]
+    },
+    "response": {
+            "status": 200
+    }
+}
